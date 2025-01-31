@@ -71,10 +71,6 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-# Create output directory
-output_directory = R"C:\Users\rms11\Desktop\Proj\5.0_Pre-Traine\Experiment_Results_5.1"
-os.makedirs(output_directory, exist_ok=True)
-
 # === MODEL TRAINING ===
 learning_rate = 0.0001
 epochs = 10
@@ -84,6 +80,10 @@ history = model.fit(
     epochs=epochs,
     validation_data=validation_dataset
 )
+
+# Create output directory
+output_directory = R"C:\Users\rms11\Desktop\y3_proj\3.1 (5.1)\3.1_results"
+os.makedirs(output_directory, exist_ok=True)
 
 # === VISUALIZATION FUNCTION ===
 

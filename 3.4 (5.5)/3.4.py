@@ -1,19 +1,17 @@
+import tensorflow as tf
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow as tf
+import csv
 from tensorflow.keras import layers, models
-from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.utils import image_dataset_from_directory
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import csv
+from tensorflow.keras.applications import EfficientNetB0
 
 # === DATA LOADING AND PREPROCESSING ===
 
 # Specify the path to your leaf dataset directory
-dataset_path = R"C:\Users\rms11\Desktop\Proj\5.0_Pre-Trained\shrooms_ds_validated_MAX"
-
-# Define the target image size and batch size
+dataset_path = R"C:\Users\rms11\Desktop\Proj\Datasets\shrooms_ds_validated_MAX"
 image_size = (224, 224)  # EfficientNetB0 input size
 batch_size = 32
 
@@ -71,13 +69,25 @@ model = tf.keras.Sequential([
 
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.00005),
               loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
+              metrics=['accuracy'] )
+
+# === MODEL TRAINING ===
+
+learning_rate = 0.0001
+epochs = 10
+naming_base = f"efficientnet_LR{learning_rate}_BS{batch_size}_E{epochs}"
+history = model.fit(
+    train_dataset,
+    epochs=epochs,
+    validation_data=validation_dataset
+)
 
 # Create output directory
-output_directory = R"C:\Users\rms11\Desktop\Proj\5.0_Pre-Trained\Experiment_Results_5.5"
+output_directory = R"C:\Users\rms11\Desktop\y3_proj\3.4 (5.5)\3.4_results"
 os.makedirs(output_directory, exist_ok=True)
 
 # === VISUALIZATION FUNCTION ===
+
 def plot_training_history(history, naming_base):
     acc = history.history['accuracy']
     val_acc = history.history['val_accuracy']
@@ -104,6 +114,7 @@ def plot_training_history(history, naming_base):
     plt.show()
 
 # === CSV STORAGE FUNCTION ===
+
 def save_training_history_to_csv(history, naming_base):
     csv_filename = os.path.join(output_directory, f'{naming_base}_training_history.csv')
     keys = history.history.keys()
@@ -117,20 +128,11 @@ def save_training_history_to_csv(history, naming_base):
 
     print(f"Training history saved to {csv_filename}.")
 
-# === MODEL TRAINING ===
-learning_rate = 0.0001
-epochs = 10
-naming_base = f"efficientnet_LR{learning_rate}_BS{batch_size}_E{epochs}"
-history = model.fit(
-    train_dataset,
-    epochs=epochs,
-    validation_data=validation_dataset
-)
-
 plot_training_history(history, naming_base)
 save_training_history_to_csv(history, naming_base)
 
 # === TESTING ===
+
 test_loss, test_accuracy = model.evaluate(test_dataset)
 print(f"Test Loss: {test_loss}")
 print(f"Test Accuracy: {test_accuracy}")
@@ -144,6 +146,7 @@ with open(test_results_file, 'w') as f:
 print(f"Test results saved to {test_results_file}.")
 
 # === CONFUSION MATRIX ===
+
 # Generate predictions and true labels
 true_labels = []
 predicted_labels = []
@@ -168,6 +171,7 @@ plt.show()
 print(f"Confusion matrix saved to {confusion_matrix_filename}.")
 
 # === SAVE THE MODEL ===
+
 model_filename = os.path.join(output_directory, f"{naming_base}.h5")
 model.save(model_filename)
 print(f"Model saved to {model_filename}.")
