@@ -94,7 +94,7 @@ history = model.fit(
 )
 
 # Create output directory
-output_directory = R"C:\Users\rms11\Desktop\Proj\4.0_LeafSnap_Merged\Experiment_Results_4.5"
+output_directory = R"C:\Users\rms11\Desktop\y3_proj\2.4\2.4_Results"
 os.makedirs(output_directory, exist_ok=True)
 
 # === VISUALIZATION FUNCTION ===

@@ -24,3 +24,16 @@ created data augmentation layer
 included this layer within model definition
 
 what's new in 2.5
+expanded model architecture - new 512 node conv2d layer, new 256 node dense layer
+
+3.1
+import mobilenetv2
+implement mobilenetv2
+
+3.2
+
+3.3
+
+3.4
+
+3.5

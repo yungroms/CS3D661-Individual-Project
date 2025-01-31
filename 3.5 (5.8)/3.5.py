@@ -1,19 +1,22 @@
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import csv
 import os
 import numpy as np
-from tensorflow.keras import layers, models
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras import layers, models, Model, callbacks
+from tensorflow.keras.applications import VGG19
+from tensorflow.keras.layers import BatchNormalization, Dense, Dropout
 from tensorflow.keras.utils import image_dataset_from_directory
+from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import csv
 
 # === DATA LOADING AND PREPROCESSING ===
 
-dataset_path = (R"C:\Users\rms11\Desktop\Proj\Datasets\LeafSnap_15_Lab")
-image_size = (256, 256)
+dataset_path = R"C:\Users\Rhodri\Desktop\Project\shrooms_ds_validated"
+image_size = (224, 224)  # VGG19 input size
 batch_size = 32
 
-# Load the entire dataset without validation split
+# Load the dataset
 full_dataset = image_dataset_from_directory(
     dataset_path,
     image_size=image_size,
@@ -22,7 +25,7 @@ full_dataset = image_dataset_from_directory(
     seed=42
 )
 
-# Define dataset sizes for splitting (70% training, 20% validation, 10% test)
+# Define dataset sizes for splitting
 dataset_size = len(full_dataset)
 train_size = int(0.7 * dataset_size)
 val_size = int(0.2 * dataset_size)
@@ -34,62 +37,109 @@ remaining_dataset = full_dataset.skip(train_size)
 validation_dataset = remaining_dataset.take(val_size)
 test_dataset = remaining_dataset.skip(val_size)
 
-# Normalize pixel values to the range [0, 1] using a Rescaling layer
+# Normalize pixel values
 normalization_layer = layers.Rescaling(1.0 / 255)
 train_dataset = train_dataset.map(lambda x, y: (normalization_layer(x), y))
 validation_dataset = validation_dataset.map(lambda x, y: (normalization_layer(x), y))
 test_dataset = test_dataset.map(lambda x, y: (normalization_layer(x), y))
 
-# Prefetch data to optimize pipeline performance during training
+# Improved data augmentation
+augmentation_layer = tf.keras.Sequential([
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.3),
+    layers.RandomZoom(0.3),
+    layers.RandomContrast(0.2),
+    layers.RandomTranslation(0.1, 0.1)
+])
+train_dataset = train_dataset.map(lambda x, y: (augmentation_layer(x), y))
+
+# Prefetch data
 train_dataset = train_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 validation_dataset = validation_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 test_dataset = test_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
-# Extract class names automatically from the dataset directory structure
+# Extract class names
 class_names = full_dataset.class_names
+num_classes = len(class_names)
 print(f"Class names: {class_names}")
 
-# === MODEL ARCHITECTURE ===
+# Compute class weights
+true_labels = []
+for _, labels in train_dataset.unbatch():  # Fix class weights computation
+    true_labels.append(labels.numpy())
+true_labels = np.array(true_labels)
+class_weights = compute_class_weight('balanced', classes=np.unique(true_labels), y=true_labels)
+class_weights = {i: weight for i, weight in enumerate(class_weights)}
+print(f"Class weights: {class_weights}")
 
-model = models.Sequential([
-    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(256, 256, 3)),
-    layers.MaxPooling2D(2, 2),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.MaxPooling2D(2, 2),
-    layers.Conv2D(128, (3, 3), activation='relu'),
-    layers.MaxPooling2D(2, 2),
-    layers.Conv2D(256, (3, 3), activation='relu'),
-    layers.MaxPooling2D(2, 2),
-    layers.Flatten(),
-    layers.Dense(128, activation='relu'),
-    layers.Dropout(0.5),
-    layers.Dense(len(class_names), activation='softmax')
-])
+# === MODEL DEFINITION ===
+
+# Load VGG19
+base_model = VGG19(weights="imagenet", include_top=False, input_shape=(224, 224, 3), pooling='avg')
+
+# Unfreeze the last few layers of VGG19 for fine-tuning
+for layer in base_model.layers[:-4]:
+    layer.trainable = False
+for layer in base_model.layers[-4:]:
+    layer.trainable = True
+
+# Add custom layers
+x = base_model.output
+x = BatchNormalization()(x)
+x = Dense(512, activation='relu', kernel_regularizer=tf.keras.regularizers.L2(0.01))(x)
+x = Dropout(0.4)(x)
+x = BatchNormalization()(x)
+x = Dense(256, activation='relu', kernel_regularizer=tf.keras.regularizers.L2(0.01))(x)
+x = Dropout(0.4)(x)
+x = BatchNormalization()(x)
+predictions = Dense(num_classes, activation='softmax')(x)
+
+# Complete the model
+model = Model(inputs=base_model.input, outputs=predictions)
 
 # === MODEL COMPILATION ===
 
-model.compile(optimizer='adam',
+# Use cosine decay learning rate
+initial_learning_rate = 0.0001
+lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
+    initial_learning_rate=initial_learning_rate,
+    decay_steps=10000,
+    alpha=0.01
+)
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-# === MODEL TRAINING ===
+# Create output directory
+output_directory = R"C:\Users\Rhodri\Desktop\Project\Results\5.8"
+os.makedirs(output_directory, exist_ok=True)
 
-learning_rate = 0.0005
-epochs = 20
-dropout_rate = 0.35
-naming_base = f"model_LR{learning_rate}_BS{batch_size}_DR{dropout_rate}_E{epochs}"
+# === CALLBACKS ===
+reduce_lr = callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=1e-6, verbose=1)
+early_stopping = callbacks.EarlyStopping(monitor='val_loss', patience=7, restore_best_weights=True, verbose=1)
+
+# === MODEL TRAINING ===
+epochs = 50
+naming_base = f"vgg19_LR{initial_learning_rate}_BS{batch_size}_E{epochs}"
 history = model.fit(
     train_dataset,
     epochs=epochs,
-    validation_data=validation_dataset
+    validation_data=validation_dataset,
+    class_weight=class_weights,
+    callbacks=[reduce_lr, early_stopping]
 )
 
-# Create output directory
-output_directory = R"C:\Users\rms11\Desktop\y3_proj\2.2\2.2_Results"
-os.makedirs(output_directory, exist_ok=True)
+# === TEST-TIME AUGMENTATION (TTA) ===
+def test_time_augmentation(model, dataset, augmentations=5):
+    predictions = []
+    for images, _ in dataset:
+        augmented_images = [augmentation_layer(images) for _ in range(augmentations)]
+        augmented_preds = [model.predict(aug_img) for aug_img in augmented_images]
+        avg_preds = np.mean(augmented_preds, axis=0)  # Average predictions
+        predictions.extend(avg_preds)
+    return predictions
 
 # === VISUALIZATION FUNCTION ===
-
 def plot_training_history(history, naming_base):
     acc = history.history['accuracy']
     val_acc = history.history['val_accuracy']
@@ -115,8 +165,7 @@ def plot_training_history(history, naming_base):
     plt.savefig(plot_filename)
     plt.show()
 
-# === CSV STORAGE FUNCTION ===
-
+# === SAVE HISTORY ===
 def save_training_history_to_csv(history, naming_base):
     csv_filename = os.path.join(output_directory, f'{naming_base}_training_history.csv')
     keys = history.history.keys()
@@ -130,13 +179,10 @@ def save_training_history_to_csv(history, naming_base):
 
     print(f"Training history saved to {csv_filename}.")
 
-
-
 plot_training_history(history, naming_base)
 save_training_history_to_csv(history, naming_base)
 
 # === TESTING ===
-
 test_loss, test_accuracy = model.evaluate(test_dataset)
 print(f"Test Loss: {test_loss}")
 print(f"Test Accuracy: {test_accuracy}")
@@ -150,8 +196,6 @@ with open(test_results_file, 'w') as f:
 print(f"Test results saved to {test_results_file}.")
 
 # === CONFUSION MATRIX ===
-
-# Generate predictions and true labels
 true_labels = []
 predicted_labels = []
 for images, labels in test_dataset:
@@ -159,11 +203,9 @@ for images, labels in test_dataset:
     predictions = model.predict(images)
     predicted_labels.extend(np.argmax(predictions, axis=1))
 
-# Create confusion matrix
 conf_matrix = confusion_matrix(true_labels, predicted_labels, labels=range(len(class_names)))
 conf_matrix_display = ConfusionMatrixDisplay(conf_matrix, display_labels=class_names)
 
-# Plot and save the confusion matrix
 plt.figure(figsize=(10, 8))
 conf_matrix_display.plot(cmap='viridis', values_format='d', ax=plt.gca())
 plt.title('Confusion Matrix')
@@ -175,7 +217,6 @@ plt.show()
 print(f"Confusion matrix saved to {confusion_matrix_filename}.")
 
 # === SAVE THE MODEL ===
-
 model_filename = os.path.join(output_directory, f"{naming_base}.h5")
 model.save(model_filename)
 print(f"Model saved to {model_filename}.")

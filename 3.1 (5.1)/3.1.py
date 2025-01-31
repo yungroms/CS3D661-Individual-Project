@@ -6,11 +6,13 @@ import numpy as np
 from tensorflow.keras import layers, models
 from tensorflow.keras.utils import image_dataset_from_directory
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from tensorflow.keras.applications import MobileNetV2
 
 # === DATA LOADING AND PREPROCESSING ===
 
+# Specify the path to your leaf dataset directory
 dataset_path = (R"C:\Users\rms11\Desktop\Proj\Datasets\LeafSnap_15_Lab")
-image_size = (256, 256)
+image_size = (224, 224)  # MobileNetV2 input size
 batch_size = 32
 
 # Load the entire dataset without validation split
@@ -34,7 +36,7 @@ remaining_dataset = full_dataset.skip(train_size)
 validation_dataset = remaining_dataset.take(val_size)
 test_dataset = remaining_dataset.skip(val_size)
 
-# Normalize pixel values to the range [0, 1] using a Rescaling layer
+# Normalize pixel values to the range [0, 1]
 normalization_layer = layers.Rescaling(1.0 / 255)
 train_dataset = train_dataset.map(lambda x, y: (normalization_layer(x), y))
 validation_dataset = validation_dataset.map(lambda x, y: (normalization_layer(x), y))
@@ -49,21 +51,18 @@ test_dataset = test_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 class_names = full_dataset.class_names
 print(f"Class names: {class_names}")
 
-# === MODEL ARCHITECTURE ===
+# === MODEL DEFINITION ===
 
-model = models.Sequential([
-    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(256, 256, 3)),
-    layers.MaxPooling2D(2, 2),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.MaxPooling2D(2, 2),
-    layers.Conv2D(128, (3, 3), activation='relu'),
-    layers.MaxPooling2D(2, 2),
-    layers.Conv2D(256, (3, 3), activation='relu'),
-    layers.MaxPooling2D(2, 2),
-    layers.Flatten(),
-    layers.Dense(128, activation='relu'),
+# Load MobileNetV2 with pre-trained weights and exclude the top layers
+base_model = MobileNetV2(input_shape=(224, 224, 3), include_top=False, weights='imagenet')
+base_model.trainable = False  # Freeze the base model
+
+# Add custom classification layers
+model = tf.keras.Sequential([
+    base_model,
+    layers.GlobalAveragePooling2D(),
     layers.Dropout(0.5),
-    layers.Dense(len(class_names), activation='softmax')
+    layers.Dense(len(class_names), activation='softmax')  # Output layer
 ])
 
 # === MODEL COMPILATION ===
@@ -72,21 +71,19 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-# === MODEL TRAINING ===
+# Create output directory
+output_directory = R"C:\Users\rms11\Desktop\Proj\5.0_Pre-Traine\Experiment_Results_5.1"
+os.makedirs(output_directory, exist_ok=True)
 
-learning_rate = 0.0005
-epochs = 20
-dropout_rate = 0.35
-naming_base = f"model_LR{learning_rate}_BS{batch_size}_DR{dropout_rate}_E{epochs}"
+# === MODEL TRAINING ===
+learning_rate = 0.0001
+epochs = 10
+naming_base = f"mobilenet_LR{learning_rate}_BS{batch_size}_E{epochs}"
 history = model.fit(
     train_dataset,
     epochs=epochs,
     validation_data=validation_dataset
 )
-
-# Create output directory
-output_directory = R"C:\Users\rms11\Desktop\y3_proj\2.2\2.2_Results"
-os.makedirs(output_directory, exist_ok=True)
 
 # === VISUALIZATION FUNCTION ===
 
@@ -129,7 +126,6 @@ def save_training_history_to_csv(history, naming_base):
             writer.writerow(row)
 
     print(f"Training history saved to {csv_filename}.")
-
 
 
 plot_training_history(history, naming_base)
