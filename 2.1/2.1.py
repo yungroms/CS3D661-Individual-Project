@@ -9,10 +9,7 @@ import os
 
 # === DATA LOADING AND PREPROCESSING ===
 
-# Specify the path to your leaf dataset directory
 dataset_path = R"C:\Users\rms11\Desktop\Proj\4.0_LeafSnap_Merged\LeafSnap_Leaves_Merged"
-
-# Define the target image size and batch size
 image_size = (256, 256)  # Resize all images to 256x256 to match model input requirements
 batch_size = 32  # Number of images processed in each batch
 
@@ -75,9 +72,22 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
+# === MODEL TRAINING ===
+
+learning_rate = 0.0005
+epochs = 20
+dropout_rate = 0.5
+
+history = model.fit(
+    train_dataset,
+    epochs=epochs,
+    validation_data=validation_dataset
+)
+
 # Create output directory
-output_directory = R"C:\Users\rms11\Desktop\Proj\4.0_LeafSnap_Merged\Experiment_Results_4.1"
+output_directory = R"C:\Users\rms11\Desktop\y3_proj\2.1\2.1_Results"
 os.makedirs(output_directory, exist_ok=True)
+
 
 # === VISUALIZATION FUNCTION ===
 def plot_training_history(history, learning_rate, batch_size, dropout_rate, epochs):
@@ -119,20 +129,11 @@ def save_training_history_to_csv(history, learning_rate, batch_size, dropout_rat
 
     print(f"Training history saved to {csv_filename}.")
 
-# === MODEL TRAINING ===
-learning_rate = 0.0005
-epochs = 20
-dropout_rate = 0.5
-history = model.fit(
-    train_dataset,
-    epochs=epochs,
-    validation_data=validation_dataset
-)
-
 plot_training_history(history, learning_rate, batch_size, dropout_rate, epochs)
 save_training_history_to_csv(history, learning_rate, batch_size, dropout_rate, epochs)
 
 # === TESTING ===
+
 test_loss, test_accuracy = model.evaluate(test_dataset)
 print(f"Test Loss: {test_loss}")
 print(f"Test Accuracy: {test_accuracy}")
@@ -144,3 +145,4 @@ with open(test_results_file, 'w') as f:
     f.write(f"Test Accuracy: {test_accuracy}\n")
 
 print(f"Test results saved to {test_results_file}.")
+
