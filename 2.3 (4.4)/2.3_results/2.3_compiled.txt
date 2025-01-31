@@ -1,0 +1,27 @@
+model_LR0.001_BS32_DR0.5_E15
+Accuracy: 0.0667
+Log Loss: 25.6092
+
+model_LR0.001_BS32_DR0.5_E20
+Accuracy: 0.1200
+Log Loss: 17.9335
+
+model_LR0.0001_BS32_DR0.5_E20
+Accuracy: 0.1333
+Log Loss: 17.7812
+
+model_LR0.005_BS32_DR0.5_E15
+Accuracy: 0.0667
+Log Loss: 23.1634
+
+model_LR0.005_BS32_DR0.5_E20
+Accuracy: 0.0800
+Log Loss: 23.5620
+
+model_LR0.0005_BS32_DR0.5_E20
+Accuracy: 0.1067
+Log Loss: 21.3504
+
+model_LR0.0005_BS32_DR0.35_E20
+Accuracy: 0.1333
+Log Loss: 19.0573
