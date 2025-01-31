@@ -57,7 +57,6 @@ print(f"Class names: {class_names}")
 base_model = MobileNetV2(input_shape=(224, 224, 3), include_top=False, weights='imagenet')
 base_model.trainable = False  # Freeze the base model
 
-# Add custom classification layers
 model = tf.keras.Sequential([
     base_model,
     layers.GlobalAveragePooling2D(),
