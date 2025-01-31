@@ -73,9 +73,11 @@ model.compile(optimizer='adam',
 history = model.fit(
     dataset,
     epochs=10,
-    validation_data=validation_dataset)
+    validation_data=validation_dataset
+)
 
 # === VISUALIZATION FUNCTION ===
+
 def plot_training_history(history):
     acc = history.history['accuracy']
     val_acc = history.history['val_accuracy']
@@ -98,6 +100,7 @@ def plot_training_history(history):
     plt.show()
 
 # === CSV STORAGE FUNCTION ===
+
 def save_training_history_to_csv(history, filename="training_history.csv"):
     keys = history.history.keys()
 

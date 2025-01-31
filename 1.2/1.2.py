@@ -1,19 +1,14 @@
-import cv2 as cv
-import numpy as np
+import tensorflow as tf
 import matplotlib.pyplot as plt
+import csv
 from tensorflow.keras import layers, models
 from tensorflow.keras.utils import image_dataset_from_directory
-import tensorflow as tf
-import csv
 
 # === DATA LOADING AND PREPROCESSING ===
 
-# Specify the path to your leaf dataset directory
-dataset_path = (R"C:\Users\rms11\Desktop\Proj\3.0_NeuralNine_Chat\Leafsnap_Leaves")  # Update with the actual dataset directory path
-
-# Define the target image size and batch size
-image_size = (256, 256)  # Resize all images to 256x256 to match model input requirements
-batch_size = 64  # Number of images processed in each batch
+dataset_path = (R"C:\Users\rms11\Desktop\Proj\Datasets\LeafSnap_Leaves_Lab")
+image_size = (256, 256)
+batch_size = 64
 
 # Load the dataset and split into training and validation sets
 dataset = image_dataset_from_directory(
@@ -72,11 +67,21 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
+# === MODEL TRAINING ===
+
+learning_rate = 0.0005  
+epochs = 10
+dropout_rate = 0.5  
+
+history = model.fit(
+    dataset,
+    epochs=epochs,
+    validation_data=validation_dataset
+)
+
 # === VISUALIZATION FUNCTION ===
+
 def plot_training_history(history, learning_rate, batch_size, dropout_rate, epochs):
-    """
-    Plots training and validation metrics over epochs and saves it with hyperparameters in the filename.
-    """
     acc = history.history['accuracy']
     val_acc = history.history['val_accuracy']
     loss = history.history['loss']
@@ -105,10 +110,8 @@ def plot_training_history(history, learning_rate, batch_size, dropout_rate, epoc
     plt.show()
 
 # === CSV STORAGE FUNCTION ===
+
 def save_training_history_to_csv(history, learning_rate, batch_size, dropout_rate, epochs, filename="training_history.csv"):
-    """
-    Saves training and validation metrics to a CSV file with hyperparameters included in the filename.
-    """
     keys = history.history.keys()
     
     # Generate the CSV filename with hyperparameters
@@ -122,16 +125,6 @@ def save_training_history_to_csv(history, learning_rate, batch_size, dropout_rat
             writer.writerow(row)
 
     print(f"Training history saved to {csv_filename}.")
-
-# === MODEL TRAINING ===
-learning_rate = 0.0005  # Example learning rate
-epochs = 10
-dropout_rate = 0.5  # Dropout rate
-history = model.fit(
-    dataset,
-    epochs=epochs,
-    validation_data=validation_dataset
-)
 
 # Visualize training performance and save plot
 plot_training_history(history, learning_rate, batch_size, dropout_rate, epochs)
