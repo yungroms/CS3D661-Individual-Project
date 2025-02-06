@@ -11,7 +11,7 @@ from tensorflow.keras.applications import MobileNetV2
 # === DATA LOADING AND PREPROCESSING ===
 
 # Specify the path to your leaf dataset directory
-dataset_path = R"C:\Users\rms11\Desktop\Proj\Datasets\shrooms_ds_validated"
+dataset_path = R"C:\Users\rms11\Desktop\Proj\Datasets\shrooms_ds"
 image_size = (224, 224) # MobileNetV2 input size
 batch_size = 32
 

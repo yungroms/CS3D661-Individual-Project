@@ -1,0 +1,18 @@
+Class,Precision,Recall,F1-Score,Support
+acer_negundo,0.2,0.2,0.2,10.0
+acer_palmatum,0.0,0.0,0.0,6.0
+aesculus_pavi,0.0,0.0,0.0,7.0
+asimina_triloba,0.0,0.0,0.0,10.0
+cercis_canadensis,0.0,0.0,0.0,9.0
+chionanthus_virginicus,0.0,0.0,0.0,9.0
+gleditsia_triacanthos,0.0,0.0,0.0,8.0
+ilex_opaca,0.0,0.0,0.0,11.0
+liriodendron_tulipifera,0.0,0.0,0.0,10.0
+ostrya_virginiana,0.1,0.1,0.1,10.0
+prunus_sargentii,0.16666666666666666,0.16666666666666666,0.16666666666666666,6.0
+ptelea_trifoliata,0.09090909090909091,0.09090909090909091,0.09090909090909091,11.0
+quercus_montana,0.2,0.2,0.2,10.0
+styrax_japonica,0.0,0.0,0.0,6.0
+ulmus_pumila,0.0,0.0,0.0,6.0
+macro avg,0.050505050505050504,0.050505050505050504,0.050505050505050504,129.0
+weighted avg,0.05426356589147287,0.05426356589147287,0.05426356589147287,129.0
