@@ -165,7 +165,7 @@ def evaluate_model(model, test_data, output_name, output_dir):
 
 # Load test dataset
 test_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    dataset_dir.parent / 'test',  # Assuming test dataset is in a sibling directory to 'train'
+    dataset_dir.parent / 'test',
     image_size=(img_height, img_width),
     batch_size=batch_size,
     label_mode='categorical'
