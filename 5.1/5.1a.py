@@ -15,7 +15,7 @@ import itertools
 IMG_SIZE = 448
 IMG_CHANNELS = 3
 LABELS = ['daisy', 'dandelion', 'rose', 'sunflower', 'tulip']
-DATA_DIR = '/kaggle/input/flowers-recognition/flowers/'
+DATA_DIR = R"C:\Users\rms11\Desktop\Proj\Datasets\flowers"
 BATCH_SIZE = 40
 EPOCHS = 20
 
