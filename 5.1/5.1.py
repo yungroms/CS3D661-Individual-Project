@@ -1,75 +1,176 @@
-import numpy as np
-import pandas as pd
-import os
-import matplotlib.pyplot as plt
 import tensorflow as tf
-from tensorflow.keras import layers, models, optimizers, callbacks
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, classification_report
+import matplotlib.pyplot as plt
+import os
+import numpy as np
+import csv
+from tensorflow.keras import layers, models
+from tensorflow.keras.utils import image_dataset_from_directory
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from tensorflow.keras.applications import MobileNetV2
 
-# Constants
-IMSIZE = 448
-BATCH_SIZE = 40
-LABELS = ['daisy', 'dandelion', 'rose', 'sunflower', 'tulip']
-DATA_DIR = R"C:\Users\rms11\Desktop\Proj\Datasets\flowers"
+# === DATA LOADING AND PREPROCESSING ===
 
-# Function to create DataFrame
-def create_dataframe(dir):
-    filepaths, labels = [], []
-    for folder in os.listdir(dir):
-        folder_path = os.path.join(dir, folder)
-        for file in os.listdir(folder_path):
-            filepaths.append(os.path.join(folder_path, file))
-            labels.append(folder)
-    return pd.DataFrame({'filepaths': filepaths, 'labels': labels})
+# Specify the path to your leaf dataset directory
+dataset_path = R"C:\Users\Rhodri\Desktop\Project\5.1\17flowers"
+image_size = (224, 224)  # MobileNetV2 input size
+batch_size = 16
 
-# Data Preparation
-df = create_dataframe(DATA_DIR)
-train_df, temp_df = train_test_split(df, train_size=0.8, random_state=123, shuffle=True)
-valid_df, test_df = train_test_split(temp_df, train_size=0.6, random_state=123, shuffle=True)
+# Load the entire dataset without validation split
+full_dataset = image_dataset_from_directory(
+    dataset_path,
+    image_size=image_size,
+    batch_size=batch_size,
+    shuffle=True,
+    seed=42
+)
 
-# ImageDataGenerator
-datagen = ImageDataGenerator(rescale=1./255, horizontal_flip=True, validation_split=0.2)
-train_gen = datagen.flow_from_dataframe(train_df, x_col='filepaths', y_col='labels', target_size=(IMSIZE, IMSIZE), class_mode='categorical', batch_size=BATCH_SIZE)
-valid_gen = datagen.flow_from_dataframe(valid_df, x_col='filepaths', y_col='labels', target_size=(IMSIZE, IMSIZE), class_mode='categorical', batch_size=BATCH_SIZE)
-test_gen = datagen.flow_from_dataframe(test_df, x_col='filepaths', y_col='labels', target_size=(IMSIZE, IMSIZE), class_mode='categorical', batch_size=BATCH_SIZE, shuffle=False)
+# Define dataset sizes for splitting (70% training, 20% validation, 10% test)
+dataset_size = len(full_dataset)
+train_size = int(0.7 * dataset_size)
+val_size = int(0.2 * dataset_size)
+test_size = dataset_size - train_size - val_size
 
-# Model Architecture
-base_model = tf.keras.applications.EfficientNetB7(include_top=False, input_shape=(IMSIZE, IMSIZE, 3), pooling='max')
-base_model.trainable = False
+# Split the dataset
+train_dataset = full_dataset.take(train_size)
+remaining_dataset = full_dataset.skip(train_size)
+validation_dataset = remaining_dataset.take(val_size)
+test_dataset = remaining_dataset.skip(val_size)
 
-model = models.Sequential([
+# Normalize pixel values to the range [0, 1]
+normalization_layer = layers.Rescaling(1.0 / 255)
+train_dataset = train_dataset.map(lambda x, y: (normalization_layer(x), y))
+validation_dataset = validation_dataset.map(lambda x, y: (normalization_layer(x), y))
+test_dataset = test_dataset.map(lambda x, y: (normalization_layer(x), y))
+
+# Prefetch data to optimize pipeline performance during training
+train_dataset = train_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
+validation_dataset = validation_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
+test_dataset = test_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
+
+# Extract class names automatically from the dataset directory structure
+class_names = full_dataset.class_names
+print(f"Class names: {class_names}")
+
+# === MODEL DEFINITION ===
+
+# Load MobileNetV2 with pre-trained weights and exclude the top layers
+base_model = MobileNetV2(input_shape=(224, 224, 3), include_top=False, weights='imagenet')
+base_model.trainable = False  # Freeze the base model
+
+model = tf.keras.Sequential([
     base_model,
-    layers.BatchNormalization(),
-    layers.Dense(256, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)),
-    layers.Dropout(0.4),
-    layers.Dense(len(LABELS), activation='softmax')
+    layers.GlobalAveragePooling2D(),
+    layers.Dropout(0.5),
+    layers.Dense(len(class_names), activation='softmax')  # Output layer
 ])
 
-model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
-model.summary()
+# === MODEL COMPILATION ===
 
-# Callbacks
-lr_scheduler = callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, verbose=1)
-early_stopping = callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
 
-# Training
-history = model.fit(train_gen, epochs=20, validation_data=valid_gen, callbacks=[lr_scheduler, early_stopping])
+# === MODEL TRAINING ===
 
-# Predictions & Evaluation
-y_pred = np.argmax(model.predict(test_gen), axis=1)
-y_true = test_gen.classes
-print(classification_report(y_true, y_pred, target_names=LABELS))
+learning_rate = 0.00005
+epochs = 20
+naming_base = f"mobilenet_LR{learning_rate}_BS{batch_size}_E{epochs}"
+history = model.fit(
+    train_dataset,
+    epochs=epochs,
+    validation_data=validation_dataset
+)
 
-# Confusion Matrix
-cm = confusion_matrix(y_true, y_pred)
-plt.imshow(cm, cmap='Blues')
+# Create output directory
+output_directory = R"C:\Users\Rhodri\Desktop\Project\5.1\5.1c results"
+os.makedirs(output_directory, exist_ok=True)
+
+# === VISUALIZATION FUNCTION ===
+
+def plot_training_history(history, naming_base):
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs_range = range(len(acc))
+
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, acc, label='Training Accuracy')
+    plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+    plt.legend(loc='lower right')
+    plt.title('Training and Validation Accuracy')
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, loss, label='Training Loss')
+    plt.plot(epochs_range, val_loss, label='Validation Loss')
+    plt.legend(loc='upper right')
+    plt.title('Training and Validation Loss')
+
+    plot_filename = os.path.join(output_directory, f'{naming_base}_training_plot.png')
+    plt.savefig(plot_filename)
+    plt.show()
+
+# === CSV STORAGE FUNCTION ===
+
+def save_training_history_to_csv(history, naming_base):
+    csv_filename = os.path.join(output_directory, f'{naming_base}_training_history.csv')
+    keys = history.history.keys()
+
+    with open(csv_filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Epoch'] + list(keys))
+        for epoch in range(len(history.history['accuracy'])):
+            row = [epoch + 1] + [history.history[key][epoch] for key in keys]
+            writer.writerow(row)
+
+    print(f"Training history saved to {csv_filename}.")
+
+plot_training_history(history, naming_base)
+save_training_history_to_csv(history, naming_base)
+
+# === TESTING ===
+
+test_loss, test_accuracy = model.evaluate(test_dataset)
+print(f"Test Loss: {test_loss}")
+print(f"Test Accuracy: {test_accuracy}")
+
+# Save test results
+test_results_file = os.path.join(output_directory, f'{naming_base}_test_results.txt')
+with open(test_results_file, 'w') as f:
+    f.write(f"Test Loss: {test_loss}\n")
+    f.write(f"Test Accuracy: {test_accuracy}\n")
+
+print(f"Test results saved to {test_results_file}.")
+
+# === CONFUSION MATRIX ===
+
+# Generate predictions and true labels
+true_labels = []
+predicted_labels = []
+for images, labels in test_dataset:
+    true_labels.extend(labels.numpy())
+    predictions = model.predict(images)
+    predicted_labels.extend(np.argmax(predictions, axis=1))
+
+# Create confusion matrix
+conf_matrix = confusion_matrix(true_labels, predicted_labels, labels=range(len(class_names)))
+conf_matrix_display = ConfusionMatrixDisplay(conf_matrix, display_labels=class_names)
+
+# Plot and save the confusion matrix
+plt.figure(figsize=(10, 8))
+conf_matrix_display.plot(cmap='viridis', values_format='d', ax=plt.gca())
 plt.title('Confusion Matrix')
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
+plt.xticks(rotation=45)
+confusion_matrix_filename = os.path.join(output_directory, f'{naming_base}_confusion_matrix.png')
+plt.savefig(confusion_matrix_filename)
 plt.show()
 
-# Save Model for Mobile Deployment
-model.save('5.1.tflite')
-print("Model saved as TFLite for Flutter deployment")
+print(f"Confusion matrix saved to {confusion_matrix_filename}.")
+
+# === SAVE THE MODEL ===
+
+model_filename = os.path.join(output_directory, f"{naming_base}.h5")
+model.save(model_filename)
+print(f"Model saved to {model_filename}.")
