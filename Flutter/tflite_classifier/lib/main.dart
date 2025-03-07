@@ -4,6 +4,7 @@ import 'package:image/image.dart' as img;
 import 'dart:io';
 import 'dart:typed_data';
 import 'tflite_service.dart';
+import 'package:flutter/services.dart'; // Import rootBundle
 
 void main() {
   runApp(const MyApp());
@@ -41,7 +42,17 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _testAssetLoad(); // <-- Test if model asset exists before loading the model
     tfliteService.loadModel();
+  }
+
+    Future<void> _testAssetLoad() async {
+    try {
+      await rootBundle.load('assets/model1.tflite');
+      print('✅ Model asset verified: File exists and can be read');
+    } catch (e) {
+      print('❌ Model asset error: $e');
+    }
   }
 
   Future<void> _pickImage() async {

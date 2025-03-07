@@ -6,7 +6,7 @@ class TFLiteService {
 
   Future<void> loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/mobilenet_LR5e-05_BS32_E20.tflite');
+      _interpreter = await Interpreter.fromAsset('model1.tflite');
       print('Model loaded successfully');
     } catch (e) {
       print('Failed to load model: $e');
