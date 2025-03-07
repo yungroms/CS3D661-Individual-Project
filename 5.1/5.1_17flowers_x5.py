@@ -11,7 +11,7 @@ from tensorflow.keras.applications import MobileNetV2
 # === DATA LOADING AND PREPROCESSING ===
 
 # Specify the path to your leaf dataset directory
-dataset_path = R"C:\Users\Rhodri\Desktop\Project\5.1\17flowers_x5"
+dataset_path = R"C:\Users\rms11\Desktop\Proj\Datasets\17flowers_x5"
 image_size = (224, 224)  # MobileNetV2 input size
 batch_size = 16
 
@@ -82,7 +82,7 @@ history = model.fit(
 )
 
 # Create output directory
-output_directory = R"C:\Users\Rhodri\Desktop\Project\5.1\5.1_17flowers_x5_results"
+output_directory = R"C:\Users\rms11\Desktop\y3_proj\5.1\5.1_17flowers_x5_results"
 os.makedirs(output_directory, exist_ok=True)
 
 # === VISUALIZATION FUNCTION ===
