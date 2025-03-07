@@ -9,16 +9,19 @@ from PIL import Image
 app = Flask(__name__)
 
 # Configure upload folder
-UPLOAD_FOLDER = r'static/uploads/'
+UPLOAD_FOLDER = r"static/uploads/"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure directory exists
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 # Load TensorFlow model
-MODEL_PATH = r"model\model1.h5"
+MODEL_PATH = r"model/model1.h5"
 MODEL = tf.keras.models.load_model(MODEL_PATH)
 
 # Define class names (match your training dataset's class names)
-class_names = ["Bluebell","Buttercup","Coltsfoot","Cowslip","Crocus","Daffodil","Daisy","Dandelion","Fritillary","Iris","Lilyvalley","Pansy","Snowdrop","Sunflower","Tigerlily","Tulip","Windflower"] 
+class_names = ["Bluebell","Buttercup","Coltsfoot","Cowslip","Crocus",
+               "Daffodil","Daisy","Dandelion","Fritillary","Iris",
+               "Lilyvalley","Pansy","Snowdrop","Sunflower","Tigerlily","Tulip","Windflower"] 
 
 # Function to check allowed file extensions
 def allowed_file(filename):
@@ -31,7 +34,12 @@ def preprocess_image(image_path):
     img_array = np.array(img) / 255.0  # Normalize pixels to [0, 1]
     return np.expand_dims(img_array, axis=0)  # Add batch dimension
 
+@app.route("/health")
+def health_check():
+    return "OK", 200
+
 @app.route("/", methods=["GET", "POST"])
+
 def upload_predict():
     if request.method == "POST":
         if "file" not in request.files:
@@ -58,4 +66,5 @@ def upload_predict():
 
 # Run the Flask app
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))  # Cloud Run will set the port
+    app.run(host="0.0.0.0", port=port, debug=False)
