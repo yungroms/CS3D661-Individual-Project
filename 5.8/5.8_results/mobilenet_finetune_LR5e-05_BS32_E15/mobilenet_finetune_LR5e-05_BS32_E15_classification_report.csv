@@ -1,0 +1,20 @@
+Class,Precision,Recall,F1-Score,Support
+Bluebell,1.0,1.0,1.0,72.0
+Buttercup,1.0,1.0,1.0,75.0
+Coltsfoot,1.0,1.0,1.0,76.0
+Cowslip,1.0,1.0,1.0,84.0
+Crocus,1.0,1.0,1.0,74.0
+Daffodil,1.0,1.0,1.0,80.0
+Daisy,1.0,1.0,1.0,93.0
+Dandelion,1.0,1.0,1.0,88.0
+Fritillary,1.0,1.0,1.0,93.0
+Iris,1.0,1.0,1.0,90.0
+Lilyvalley,1.0,1.0,1.0,74.0
+Pansy,1.0,1.0,1.0,69.0
+Snowdrop,1.0,1.0,1.0,81.0
+Sunflower,1.0,1.0,1.0,80.0
+Tigerlily,1.0,1.0,1.0,93.0
+Tulip,1.0,1.0,1.0,69.0
+Windflower,1.0,1.0,1.0,79.0
+macro avg,1.0,1.0,1.0,1370.0
+weighted avg,1.0,1.0,1.0,1370.0
