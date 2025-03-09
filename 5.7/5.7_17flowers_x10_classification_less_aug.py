@@ -10,7 +10,7 @@ from tensorflow.keras.applications import MobileNetV2
 
 # === DATA LOADING AND PREPROCESSING ===
 
-dataset_path = R"C:\Users\rms11\Desktop\Proj\Datasets\17flowers_10x_less_aug"
+dataset_path = R"C:\Users\rms11\Desktop\Proj\Datasets\flowers"
 image_size = (224, 224)
 batch_size = 32
 
