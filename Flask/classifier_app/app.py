@@ -15,7 +15,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 # Load TensorFlow model
-MODEL_PATH = r"model/model1.h5"
+MODEL_PATH = r"model/model2.h5"
 MODEL = tf.keras.models.load_model(MODEL_PATH)
 
 # Define class names (match your training dataset's class names)
