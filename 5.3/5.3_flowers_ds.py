@@ -146,20 +146,3 @@ plt.savefig(confusion_matrix_filename)
 plt.show()
 
 print(f"Confusion matrix saved to {confusion_matrix_filename}.")
-
-# === CLASSIFICATION REPORT ===
-
-report = classification_report(true_labels, predicted_labels, target_names=class_names, output_dict=True)
-report_csv = os.path.join(output_directory, f"{naming_base}_classification_report.csv")
-with open(report_csv, mode='w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow(['Class', 'Precision', 'Recall', 'F1-Score', 'Support'])
-    for class_label, metrics in report.items():
-        if isinstance(metrics, dict):
-            writer.writerow([class_label, metrics['precision'], metrics['recall'], metrics['f1-score'], metrics['support']])
-
-print(f"Classification report saved to {report_csv}.")
-
-model_filename = os.path.join(output_directory, f"{naming_base}.h5")
-model.save(model_filename)
-print(f"Model saved to {model_filename}.")
