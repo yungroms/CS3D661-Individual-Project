@@ -13,7 +13,7 @@ from tensorflow.keras.applications import MobileNetV2
 # Specify the path to your leaf dataset directory
 dataset_path = R"C:\Users\Rhodri\Desktop\Project\5.1\17flowers"
 image_size = (224, 224)  # MobileNetV2 input size
-batch_size = 16
+batch_size = 32
 
 # Load the entire dataset without validation split
 full_dataset = image_dataset_from_directory(

@@ -71,6 +71,7 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 # === MODEL TRAINING ===
+
 learning_rate = 0.0001
 epochs = 10
 naming_base = f"mobilenet_LR{learning_rate}_BS{batch_size}_E{epochs}"
@@ -125,7 +126,6 @@ def save_training_history_to_csv(history, naming_base):
             writer.writerow(row)
 
     print(f"Training history saved to {csv_filename}.")
-
 
 plot_training_history(history, naming_base)
 save_training_history_to_csv(history, naming_base)

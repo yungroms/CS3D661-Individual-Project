@@ -1,0 +1,2 @@
+Label all figures
+Configure all hyperlinks
