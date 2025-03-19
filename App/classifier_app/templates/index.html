@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Species Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -19,6 +19,21 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            font-family: 'Chewy', cursive;
+        }
+        .title span {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .flower-icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
         }
         h2 {
             color: #333;
@@ -44,7 +59,7 @@
         .image-container {
             margin-top: 20px;
         }
-        img {
+        img.uploaded {
             max-width: 100%;
             border-radius: 10px;
             border: 2px solid #ddd;
@@ -59,9 +74,28 @@
             color: #555;
             font-size: 16px;
         }
+        .student-info {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Title Section -->
+    <div class="title">
+        <div>
+            <span>F L</span>
+            <img src="{{ url_for('static', filename='flower_power.png') }}" alt="Flower Icon" class="flower-icon">
+            <span> W E R</span>
+        </div>
+        <div>
+            <span>P</span>
+            <img src="{{ url_for('static', filename='flower_power.png') }}" alt="Flower Icon" class="flower-icon">
+            <span> W E R</span>
+        </div>
+    </div>
 
     <div class="container">
         <h2>Upload an Image for Classification</h2>
@@ -74,7 +108,7 @@
         {% if filename %}
             <div class="image-container">
                 <h3>Uploaded Image:</h3>
-                <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Uploaded Image">
+                <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Uploaded Image" class="uploaded">
                 <p class="result">Prediction: <strong>{{ prediction }}</strong></p>
                 <p class="confidence">Confidence: <strong>{{ "%.2f"|format(confidence) }}%</strong></p>
             </div>
@@ -83,6 +117,11 @@
         {% if message %}
             <p style="color: red;">{{ message }}</p>
         {% endif %}
+    </div>
+
+    <!-- Student Info -->
+    <div class="student-info">
+        Rhodri Owain Morris-Stiff   -   30031906
     </div>
 
 </body>
