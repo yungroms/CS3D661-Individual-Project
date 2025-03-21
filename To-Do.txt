@@ -1,12 +1,20 @@
+Testing 1:  Create a test dataset of 5 images for each class from the internet. Write code to test the model using these images. DONE
+Testing 2: Visit Garden Centre. Find as many relevant species as possible. Take 10 pics of each species found. Apply same test as Testing 1.
+Testing 2a: try using the app at the garden centre. See how well it works in the field while deployed
+
+App Testing:
+ensure all allowed file types work properly (jpeg, jpg, png, webp)
+try predicting without uploading (generates 'Please select a file')
+try uploading an incorrect file type like txt, py, etc. (generates 'incorrect file type')
+
+Evaluation:
+Project summary
+Key findings
+Ares of Improvement
+Conclusion
+
+Extras:
 Label all figures !!
 Configure all hyperlinks !!
-
-Re-draft milestone 1
-
-Testing - Create a test dataset of 10 images for each class from the internet. Write code to test the model using these images.
-Changed to 5/class. Need to add to report. Either at the end of model development testing or in designated testing section.
-
-Create a confusion matrix, classification report, image board with predicted/true labels, other metrics. Pray for good results
-Evaluation - Evaluate the application functionality. De-bug as much as possible. Much more needed here. 
 
 Poster

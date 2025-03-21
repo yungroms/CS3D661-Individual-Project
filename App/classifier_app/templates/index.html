@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Species Classifier</title>
-    <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chicle&family=Arial&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -21,19 +21,23 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .title {
-            font-size: 24px;
-            color: #333;
+            font-size: 50px; /* Increased font size for balance */
+            color: #8c52ff; /* Purple color */
             margin-bottom: 20px;
-            font-family: 'Chewy', cursive;
+            font-family: 'Chicle', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
         }
         .title span {
             display: inline-block;
             vertical-align: middle;
         }
         .flower-icon {
-            width: 24px;
-            height: 24px;
-            vertical-align: middle;
+            width: 0.8em;
+            height: 0.8em;
+            vertical-align: -0.15em;
         }
         h2 {
             color: #333;
@@ -44,17 +48,20 @@
         input[type="file"] {
             margin: 10px 0;
         }
+        /* Updated Button Styling */
         button {
-            background-color: #007BFF;
+            background: linear-gradient(45deg, #8c52ff, #6a35cc);
             color: white;
             border: none;
             padding: 10px 15px;
             font-size: 16px;
             border-radius: 5px;
             cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         button:hover {
-            background-color: #0056b3;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(140, 82, 255, 0.4);
         }
         .image-container {
             margin-top: 20px;
@@ -78,6 +85,19 @@
             margin-top: 30px;
             font-size: 14px;
             color: #555;
+            text-align: center;
+        }
+        .student-info p {
+            margin: 5px 0;
+        }
+        /* Unified Error Message Styling */
+        .error-message {
+            color: white;
+            background: #8c52ff;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -101,8 +121,10 @@
         <h2>Upload an Image for Classification</h2>
         
         <form action="/" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" required>
+            <!-- File Type Validation -->
+            <input type="file" name="file" id="file-input" required accept="image/png, image/jpeg, image/webp">
             <button type="submit">Predict</button>
+            <p id="file-error" class="error-message" style="display: none;">Invalid file type. Please upload a PNG, JPG, JPEG, or WEBP.</p>
         </form>
 
         {% if filename %}
@@ -115,14 +137,40 @@
         {% endif %}
 
         {% if message %}
-            <p style="color: red;">{{ message }}</p>
+            <p class="error-message">{{ message }}</p>
         {% endif %}
     </div>
 
     <!-- Student Info -->
     <div class="student-info">
-        Rhodri Owain Morris-Stiff   -   30031906
+        <p>30031906</p>
+        <p>Rhodri Owain Morris-Stiff</p>
     </div>
+
+    <script>
+        // Client-side file type validation
+        document.querySelector("form").addEventListener("submit", function (event) {
+            let fileInput = document.getElementById("file-input");
+            let errorMsg = document.getElementById("file-error");
+            
+            if (fileInput.files.length === 0) {
+                errorMsg.innerText = "No file uploaded. Please select an image.";
+                errorMsg.style.display = "block";
+                event.preventDefault();
+            } else {
+                let fileType = fileInput.files[0].type;
+                let allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+                
+                if (!allowedTypes.includes(fileType)) {
+                    errorMsg.innerText = "Invalid file type. Please upload a PNG, JPG, JPEG, or WEBP.";
+                    errorMsg.style.display = "block";
+                    event.preventDefault();
+                } else {
+                    errorMsg.style.display = "none";
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
