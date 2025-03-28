@@ -1,2 +1,0 @@
-Accuracy: 0.1200
-Log Loss: 17.9335

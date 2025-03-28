@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
-from PIL import Image
+from PIL import Image, ImageOps
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -44,13 +44,16 @@ def upload_predict():
             filename = secure_filename(file.filename)
             file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             
-            # Open image, convert to RGB, resize, and save
-            img = Image.open(file).convert("RGB")  # Ensure RGB mode
-            img = img.resize((224, 224))  # Resize to model input size
-            img.save(file_path, quality=90)  # Save optimized image
+            # Save original image as-is for display
+            file.save(file_path)
 
-            # Preprocess image
-            img_array = np.array(img) / 255.0  # Normalize pixel values
+            # Open image and apply EXIF correction and convert to RGB
+            img = Image.open(file)
+            img = ImageOps.exif_transpose(img)  # Fix any rotation from EXIF data
+
+            # Preprocess image for prediction (resize and normalize)
+            img_for_prediction = img.resize((224, 224))  # Resize to model input size
+            img_array = np.array(img_for_prediction) / 255.0  # Normalize pixel values
             img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
             
             # Make prediction

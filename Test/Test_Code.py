@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report
 from tensorflow.keras.utils import image_dataset_from_directory
+from PIL import Image
 
 # === PATHS ===
 TEST_DIR = R"C:\Users\rms11\Desktop\y3_proj\Test\Test_Dataset"

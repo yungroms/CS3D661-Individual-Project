@@ -68,13 +68,10 @@ model.compile(optimizer='adam',
               metrics=['accuracy']
               )
 
-# === MODEL TRAINING ===
-
 history = model.fit(
     dataset,
     epochs=10,
-    validation_data=validation_dataset
-)
+    validation_data=validation_dataset)
 
 # === VISUALIZATION FUNCTION ===
 

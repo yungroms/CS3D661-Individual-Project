@@ -19,8 +19,7 @@ def augment_images(input_dir, output_dir, multiplier=10):
         zoom_range=0.1,
         horizontal_flip=True,
         brightness_range=[0.9, 1.1],
-        fill_mode='nearest'
-    )
+        fill_mode='nearest')
     
     for class_name in tqdm(classes, desc="Augmenting Classes"):
         class_input_path = os.path.join(input_dir, class_name)
