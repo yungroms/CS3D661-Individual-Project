@@ -1,6 +1,5 @@
-PROOF READ
-ORGANISE FIGURES
-VALIDATE REFERENCES
-CONFIGURE HYPERLINKS
-
 POSTER
+
+Insert hyperlinks to app versions 1&2
+Add references for datasets
+
